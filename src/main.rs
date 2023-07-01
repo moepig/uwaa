@@ -1,11 +1,11 @@
 use std::env;
 use std::process;
+use std::error::Error;
 use serde::{Deserialize, Serialize};
  
 // https://api.slack.com/methods/chat.postMessage#args
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UserTokenPostRequest {
-    token: String,
     channel: String,
     text: String,
 }
@@ -16,7 +16,7 @@ pub struct UserTokenPostResponse {
     ok: bool,
 }
 
-fn must_var(s: &str) -> String {
+fn must_env(s: &str) -> String {
     let ret_val  = match env::var(s) {
         Ok(val) => val,
         Err(err) => {
@@ -28,9 +28,32 @@ fn must_var(s: &str) -> String {
     return ret_val;
 }
 
-fn main() {
-    let token = must_var("UWAA_TOKEN");
-    let channel= must_var("UWAA_CHANNEL");
+fn main() -> Result<(), Box<dyn Error>> {
+    let token = must_env("UWAA_TOKEN");
+    let channel= must_env("UWAA_CHANNEL");
 
-    println!("Hello, world!");
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+        eprintln!("args[1] is required.");
+        process::exit(1);
+    }
+
+    let client = reqwest::blocking::Client::new();
+
+    let params = UserTokenPostRequest {
+        channel: channel,
+        text: args[1].clone(),
+    };
+
+    let response_body: UserTokenPostResponse = client.post("https://slack.com/api/chat.postMessage")
+        .header(reqwest::header::AUTHORIZATION, format!("Bearer {}", token))
+        .json(&params)
+        .send()?
+        .json()?;
+
+    println!("{:?}", params);
+    println!("{:?}", response_body);
+
+    return Ok(())
 }

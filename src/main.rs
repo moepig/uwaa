@@ -28,9 +28,19 @@ fn must_env(s: &str) -> String {
     return ret_val;
 }
 
+fn optional_env(key: &str, default: &str) -> String {
+    let ret_val  = match env::var(key) {
+        Ok(val) => val,
+        Err(_) => default.to_string(),
+    };
+
+    return ret_val;
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let token = must_env("UWAA_TOKEN");
     let channel= must_env("UWAA_CHANNEL");
+    let endpoint = optional_env("UWAA_ENDPOINT", "https://slack.com/api/chat.postMessage");
 
     let args: Vec<String> = env::args().collect();
 
@@ -46,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         text: args[1].clone(),
     };
 
-    let response_body: UserTokenPostResponse = client.post("https://slack.com/api/chat.postMessage")
+    let response_body: UserTokenPostResponse = client.post(endpoint)
         .header(reqwest::header::AUTHORIZATION, format!("Bearer {}", token))
         .json(&params)
         .send()?

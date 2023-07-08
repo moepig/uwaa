@@ -67,3 +67,26 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     return Ok(())
 }
+
+#[test]
+fn request() {
+    let mut server = mockito::Server::new();
+
+    let url = server.url();
+
+    let mock = server.mock("POST", "/")
+    .with_status(200)
+    .with_header("content-type", "application/json")
+    .with_body(r#"{"ok": true}"#)
+    .create();
+
+    env::set_var("UWAA_TOKEN", "test_token");
+    env::set_var("UWAA_CHANNEL", "CTESTCHANNEL");
+    env::set_var("UWAA_ENDPOINT", url);
+
+    let result = main();
+    assert!(result.is_ok());
+
+    mock.assert();
+    mock.remove();
+}    

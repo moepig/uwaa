@@ -78,6 +78,7 @@ fn request() {
     .with_status(200)
     .with_header("content-type", "application/json")
     .with_body(r#"{"ok": true}"#)
+    .match_header("Authorization", "Bearer test_token")
     .create();
 
     env::set_var("UWAA_TOKEN", "test_token");

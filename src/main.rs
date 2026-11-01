@@ -49,11 +49,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         process::exit(1);
     }
 
+    post_message(&token, &channel, &endpoint, &args[1])
+}
+
+fn post_message(token: &str, channel: &str, endpoint: &str, text: &str) -> Result<(), Box<dyn Error>> {
     let client = reqwest::blocking::Client::new();
 
     let params = UserTokenPostRequest {
-        channel: channel,
-        text: args[1].clone(),
+        channel: channel.to_string(),
+        text: text.to_string(),
     };
 
     let response_body: UserTokenPostResponse = client.post(endpoint)
@@ -81,11 +85,7 @@ fn request() {
     .match_header("Authorization", "Bearer test_token")
     .create();
 
-    env::set_var("UWAA_TOKEN", "test_token");
-    env::set_var("UWAA_CHANNEL", "CTESTCHANNEL");
-    env::set_var("UWAA_ENDPOINT", url);
-
-    let result = main();
+    let result = post_message("test_token", "CTESTCHANNEL", &url, "test message");
     assert!(result.is_ok());
 
     mock.assert();
